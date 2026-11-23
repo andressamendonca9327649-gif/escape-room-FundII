@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Escape Room — O Sistema Foi Invadido!</title>
+<style>
+:root{--bg:#101827;--panel:#19263a;--panel2:#22334d;--text:#f4f7fb;--muted:#b8c5d6;--accent:#45d6c5;--gold:#ffd166;--danger:#ff7b7b}
+*{box-sizing:border-box} body{margin:0;background:radial-gradient(circle at top,#243b5a,#101827 58%);color:var(--text);font:16px/1.55 Arial,sans-serif;min-height:100vh}
+main{max-width:850px;margin:auto;padding:24px 16px 50px}.top{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.tag{color:var(--accent);font-weight:bold;letter-spacing:2px;font-size:.8rem}.progress{height:9px;background:#34445c;border-radius:20px;overflow:hidden;margin:16px 0 24px}.bar{height:100%;width:0;background:var(--accent);transition:width .3s}
+.card{background:rgba(25,38,58,.96);border:1px solid #3a4e6b;border-radius:18px;padding:24px;box-shadow:0 16px 45px #0005}
+h1{font-size:clamp(1.8rem,5vw,2.7rem);line-height:1.1;margin:8px 0 12px}h2{margin-top:0}p{color:var(--muted)}
+.alert{border-left:4px solid var(--gold);padding:10px 14px;background:#ffffff0b;border-radius:8px;margin:18px 0}
+.challenge{font-size:1.3rem;letter-spacing:2px;text-align:center;background:#0d1522;padding:18px;border-radius:12px;margin:18px 0;color:var(--gold);font-weight:bold;overflow-wrap:anywhere}
+label{display:block;font-weight:bold;margin:16px 0 7px}input{width:100%;padding:14px;border-radius:10px;border:2px solid #536781;background:#0d1522;color:white;font-size:1.05rem}
+button{border:0;border-radius:10px;padding:12px 18px;font-size:1rem;font-weight:bold;cursor:pointer;margin:12px 8px 0 0}
+.primary{background:var(--accent);color:#08201e}.secondary{background:#344760;color:white}.hint{color:var(--gold);min-height:26px;margin-top:12px}.feedback{font-weight:bold;min-height:28px;margin-top:10px}.good{color:var(--accent)}.bad{color:var(--danger)}
+.small{font-size:.9rem;color:var(--muted)}.hidden{display:none}.success{font-size:1.25rem;color:var(--accent);font-weight:bold}
+ul{color:var(--muted);padding-left:22px}.footer{margin-top:16px;text-align:center;color:#9fb0c5;font-size:.85rem}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><div class="tag">MISSÃO DE SEGURANÇA DIGITAL</div><div id="stageLabel" class="small">CENTRAL DE CONTROLE</div></div>
+  <div class="progress"><div class="bar" id="bar"></div></div>
+  <section class="card" id="intro">
+    <div class="tag">ALERTA • ACESSO BLOQUEADO</div>
+    <h1>O SISTEMA FOI INVADIDO!</h1>
+    <p>Um invasor bloqueou os arquivos da escola. Para recuperar o sistema, sua equipe precisa vencer cinco desafios. Cada fase revela um número. No final, juntem os cinco números na ordem em que foram conquistados.</p>
+    <div class="alert"><strong>REGRAS DA MISSÃO</strong><ul>
+      <li>Trabalhem em equipe e conversem antes de responder.</li>
+      <li>Leiam as pistas com atenção.</li>
+      <li>Vocês podem pedir uma dica, mas tentem resolver sem ela primeiro.</li>
+      <li>Anotem cada número conquistado.</li>
+    </ul></div>
+    <p><strong>Tempo sugerido:</strong> 30 a 40 minutos.</p>
+    <button class="primary" onclick="start()">INICIAR MISSÃO</button>
+  </section>
+  <section class="card hidden" id="game">
+    <div class="tag" id="phaseTag">FASE 1 DE 5</div>
+    <h2 id="title"></h2>
+    <p id="story"></p>
+    <div class="challenge" id="puzzle"></div>
+    <p id="question"></p>
+    <label for="answer">Digite a resposta da equipe:</label>
+    <input id="answer" autocomplete="off" placeholder="Sua resposta...">
+    <div>
+      <button class="primary" onclick="check()">VALIDAR RESPOSTA</button>
+      <button class="secondary" onclick="showHint()">PRECISAMOS DE UMA DICA</button>
+    </div>
+    <div class="hint" id="hint"></div><div class="feedback" id="feedback" aria-live="polite"></div>
+    <div id="nextWrap" class="hidden"><p class="success" id="reward"></p><button class="primary" onclick="next()">PRÓXIMA FASE</button></div>
+  </section>
+  <section class="card hidden" id="final">
+    <div class="tag">MISSÃO CONCLUÍDA</div>
+    <h1>SISTEMA RECUPERADO!</h1>
+    <p>Parabéns, equipe! Vocês usaram lógica, interpretação, reconhecimento de padrões e conhecimentos de segurança digital para recuperar os arquivos.</p>
+    <div class="challenge" id="finalCode"></div>
+    <p><strong>Conversem:</strong> Qual desafio exigiu mais colaboração? Em que situações do cotidiano usamos lógica e segurança digital?</p>
+    <button class="secondary" onclick="location.reload()">REINICIAR MISSÃO</button>
+  </section>
+  <div class="footer">ESCAPE ROOM • 8º ANO • PENSAMENTO COMPUTACIONAL</div>
+</main>
+<script>
+const phases = [
+ {title:"A mensagem secreta",story:"O invasor deixou uma mensagem codificada. O alfabeto foi deslocado uma posição para a frente: cada letra foi trocada pela letra seguinte. Para ler, volte uma posição no alfabeto.",puzzle:"FTDPMB",question:"Qual é a palavra original? Digite-a em letras maiúsculas.",answers:["ESCOLA"],hint:"Se aparece F, volte para E. Faça o mesmo com todas as letras.",digit:"4"},
+ {title:"O código binário",story:"Um arquivo foi salvo em código binário. Cada grupo de oito bits representa uma letra usando a tabela ASCII.",puzzle:"01001111   01001001",question:"Os dois grupos representam quais letras? Escreva a palavra formada.",answers:["OI"],hint:"Converta cada grupo de 8 bits para decimal: 01001111 = 79 e 01001001 = 73. Na tabela ASCII, 79 é O e 73 é I.",digit:"8"},
+ {title:"O enigma dos padrões",story:"O sistema de segurança só libera a próxima etapa para quem descobrir a regra da sequência.",puzzle:"3  →  6  →  12  →  24  →  ?",question:"Qual é o próximo número da sequência?",answers:["48"],hint:"Observe o que acontece de um número para o seguinte. A cada passo, a quantidade dobra.",digit:"2"},
+ {title:"A senha invadida",story:"O invasor tentou acessar a conta de um estudante. A equipe de segurança precisa escolher a senha mais resistente entre as opções.",puzzle:"A) 12345678   B) escola2026   C) Lua#29Verde!",question:"Digite a letra da opção mais segura (A, B ou C).",answers:["C"],hint:"Uma senha forte costuma ser longa e combinar letras maiúsculas e minúsculas, números e símbolos. Evite palavras previsíveis e dados pessoais.",digit:"6"},
+ {title:"O erro no algoritmo",story:"O robô deveria calcular o dobro de um número, mas está apresentando resultados errados. Encontrem o comando incorreto.",puzzle:"INÍCIO → ler número → somar 2 → mostrar resultado → FIM",question:"Qual operação deveria estar no lugar de “somar 2” para calcular o dobro? Digite apenas a operação.",answers:["MULTIPLICAR POR 2","MULTIPLICAR","VEZES 2","X2","MULTIPLICAR POR DOIS"],hint:"Dobro significa duas vezes a mesma quantidade. Se o número for 5, o resultado esperado é 10.",digit:"1"}
+];
+let current=0, unlocked=false, hintsUsed=0, digits=[];
+const $=id=>document.getElementById(id);
+function start(){$("intro").classList.add("hidden");$("game").classList.remove("hidden");render()}
+function render(){let p=phases[current];unlocked=false;$("phaseTag").textContent=`FASE ${current+1} DE 5`;$("stageLabel").textContent=`DESAFIO ${current+1}/5`;$("title").textContent=p.title;$("story").textContent=p.story;$("puzzle").textContent=p.puzzle;$("question").textContent=p.question;$("answer").value="";$("hint").textContent="";$("feedback").textContent="";$("feedback").className="feedback";$("nextWrap").classList.add("hidden");$("bar").style.width=(current/5*100)+"%";$("answer").disabled=false}
+function normalize(s){return s.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ")}
+function check(){if(unlocked)return;let val=normalize($("answer").value);let p=phases[current];if(p.answers.map(normalize).includes(val)){unlocked=true;digits.push(p.digit);$("feedback").textContent="RESPOSTA CORRETA! FASE DESBLOQUEADA."; $("feedback").className="feedback good";$("reward").textContent=`Número conquistado: ${p.digit} — anotem!`;$("nextWrap").classList.remove("hidden");$("answer").disabled=true;$("bar").style.width=((current+1)/5*100)+"%"}else{$("feedback").textContent="Ainda não! Releiam o desafio e tentem outra vez.";$("feedback").className="feedback bad"}}
+function showHint(){hintsUsed++;$("hint").textContent="PISTA: "+phases[current].hint}
+function next(){current++;if(current<phases.length){render()}else{$("game").classList.add("hidden");$("final").classList.remove("hidden");$("stageLabel").textContent="ACESSO RESTABELECIDO";$("finalCode").textContent="SENHA FINAL: "+digits.join("");$("bar").style.width="100%"}}
+$("answer").addEventListener("keydown",e=>{if(e.key==="Enter")check()});
+</script>
+</body>
+</html>
